@@ -5,42 +5,37 @@ import ClipboardJS from "clipboard";
 
 // project imports
 import TextInput from "./components/extends/input/TextInput";
-import { useEffect, useState } from "react";
-import { Templates } from "./lib/template";
+import { useCallback, useEffect, useState } from "react";
+import { Template, Templates } from "./lib/template";
 import { Button } from "./components/ui/button";
-
-import { LucideCopy } from "lucide-react";
+import { LucideCopy, LucideCopyCheck } from "lucide-react";
 import { each } from "lodash";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner";
+import HtmlRender from "./HtmlRender";
 
 function App() {
-  const template = Templates[0];
-  const hiddenFields = Templates[0].hiddenFields;
-
+  const [template, setTemplate] = useState<Partial<Template>>({});
+  const [hiddenFields, setHiddenFields] = useState<Array<string> | undefined>();
   const [defaultValues, setDefaultValues] = useState<Record<string, string>>();
   const [fields, setFields] = useState<Record<string, string>>();
-
-  const handleInputChange = (field: string | undefined, value: string) =>
-    field &&
-    setFields((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  const [copied, setCopied] = useState<boolean>(false);
 
   useEffect(() => {
-    if (template.defaults) {
-      setDefaultValues(template.defaults);
-      setFields(template.defaults);
-    }
-  }, [template.defaults]);
+    const _template = Templates[0];
 
-  const replaceValue = (key: string, value: string) => {
+    setTemplate(_template);
+    setHiddenFields(_template.hiddenFields);
+    setDefaultValues(_template.defaults);
+    setFields(_template.defaults);
+  }, []);
+
+  const replaceValue = useCallback((key: string, value: string) => {
     if (key === "website")
       return `<a target="_blank" href='https://${value}'>${value}</a>`;
 
     return value;
-  };
+  }, []);
 
   useEffect(() => {
     each(fields, (value, key) => {
@@ -52,7 +47,17 @@ function App() {
     });
   }, [fields]);
 
-  const handleCopy = async () => {
+  const handleInputChange = useCallback(
+    (field: string | undefined, value: string) =>
+      field &&
+      setFields((prev) => ({
+        ...prev,
+        [field]: value,
+      })),
+    []
+  );
+
+  const handleCopy = useCallback(() => {
     const element = document.getElementById("text-to-copy");
     const textToCopy = element && element.innerHTML;
 
@@ -63,8 +68,11 @@ function App() {
         });
 
         clipboard.on("success", function (e) {
+          setCopied(true);
+
           toast("Copied to Clipboard!", {
             description: "Email Signature has been successfully copied.",
+            onAutoClose: () => setCopied(false),
           });
 
           e.clearSelection();
@@ -78,7 +86,7 @@ function App() {
     } catch (err) {
       console.error("Failed to copy: ", err);
     }
-  };
+  }, []);
 
   return (
     <>
@@ -92,16 +100,12 @@ function App() {
               className="font-light"
               onClick={() => handleCopy()}
             >
-              <LucideCopy />
-              Copy
+              {copied ? <LucideCopyCheck /> : <LucideCopy />}
+              {copied ? "Copied" : "Copy"}
             </Button>
           </div>
           <div className="bg-slate-100/50 flex-1 flex flex-col justify-center">
-            <div
-              id="text-to-copy"
-              className="mx-auto bg-white shadow-widget border rounded-sm"
-              dangerouslySetInnerHTML={{ __html: template.templateHtml }}
-            ></div>
+            <HtmlRender template={template.templateHtml} />
           </div>
         </div>
       </div>
@@ -153,7 +157,7 @@ function App() {
       </div>
 
       <Toaster
-        position="top-center"
+        position="bottom-left"
         toastOptions={{
           classNames: {
             description: "!text-gray-500",
