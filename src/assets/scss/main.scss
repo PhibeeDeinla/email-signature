@@ -1,4 +1,7 @@
+
 @use "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
@@ -114,6 +117,11 @@
     @apply border-border outline-ring/50;
   }
   body {
+    font-family: "Inter", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 300;
+    font-style: normal;
+
     @apply bg-background text-foreground;
   }
 
@@ -121,4 +129,19 @@
   [role="button"] {
     cursor: pointer;
   }
+
+  .shadow-widget {
+    -webkit-box-shadow: -1px 8px 36px 0px rgba(0,0,0,0.15);
+    -moz-box-shadow: -1px 8px 36px 0px rgba(0,0,0,0.15);
+    box-shadow: -1px 8px 36px 0px rgba(0,0,0,0.15);
+  }
+
+  #text-to-copy * {
+    border-style: none;
+  }
+}
+
+
+#text-to-copy {
+  @apply max-w-[550px]
 }
