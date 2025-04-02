@@ -1,7 +1,7 @@
 // project imports
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChangeEvent, useCallback } from "react";
+import { ChangeEvent, useCallback, useEffect, useState } from "react";
 
 interface TextInputProps {
   name: string;
@@ -10,6 +10,7 @@ interface TextInputProps {
   debounceTime?: number;
   placeholder?: string;
   onChange?: (value: string, exposedProps: Partial<ExposedTextProps>) => void;
+  value?: string;
 }
 
 type ExposedTextProps = Omit<TextInputProps, "onChange">;
@@ -20,9 +21,16 @@ function TextInput({
   placeholder,
   debounce,
   debounceTime = 1000,
+  value,
   onChange,
 }: TextInputProps) {
   let typingTimer: NodeJS.Timeout | null = null;
+
+  const [inputValue, setInputValue] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    setInputValue(value);
+  }, []);
 
   const handleInputChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -30,11 +38,14 @@ function TextInput({
 
       if (!debounceTime) {
         onChange?.(value, { name });
+        setInputValue(value);
         return;
       }
 
       if (typingTimer) clearTimeout(typingTimer);
-      typingTimer = setTimeout(() => onChange?.(value, { name }), debounceTime);
+      typingTimer = setTimeout(() => {
+        onChange?.(value, { name });
+      }, debounceTime);
     },
     [onChange, debounce, debounceTime]
   );
@@ -47,7 +58,12 @@ function TextInput({
       >
         {label}
       </Label>
-      <Input id={name} placeholder={placeholder} onChange={handleInputChange} />
+      <Input
+        id={name}
+        placeholder={placeholder}
+        value={inputValue}
+        onChange={handleInputChange}
+      />
     </div>
   );
 }
